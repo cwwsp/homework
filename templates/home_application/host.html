@@ -1,0 +1,179 @@
+<%inherit file="/base.html"/>
+<%block name='title'>主机状态</%block>
+<%block name="content">
+        <div class="king-layout2-main mt15" style="width:1080px;">
+            <form class="form-horizontal">
+                <div class="form-group clearfix ">
+                    <label class="col-sm-3 control-label bk-lh30 pt0">选择业务：</label>
+                    <div class="col-sm-4">
+                        <select name="" id="biz_id" class="form-control bk-valign-top">
+                        </select>
+                </div>
+                </div>
+                <div class="form-group clearfix ">
+                    <label class="col-sm-3 control-label bk-lh30 pt0">选择IP：</label>
+                    <div class="plugin3_demo col-sm-9" id="plugin3_demo3" style="display:inline-block;">
+                        <!-- select2 通过ajax start -->
+                        <div class="select2-container select2_box select2-container-active" id="s2id_autogen5" style="width:300px;">
+                            <a href="javascript:void(0)" class="select2-choice" tabindex="-1"> <span class="select2-chosen" id="select2-chosen-6">&nbsp;</span><abbr class="select2-search-choice-close"></abbr> <span class="select2-arrow" role="presentation"><b role="presentation"></b></span></a>
+                            <label for="s2id_autogen6" class="select2-offscreen"></label>
+                            <input class="select2-focusser select2-offscreen" type="text" aria-haspopup="true" role="button" aria-labelledby="select2-chosen-6" id="s2id_autogen6">
+                        </div>
+                        <input type="hidden" class="select2_box" style="width: 300px; display: none;" tabindex="-1" title="">
+                        <!-- select2 通过ajax end -->
+                    </div>
+                </div>
+                <div class="form-group clearfix">
+                    <div class="col-sm-9 col-sm-offset-3">
+                        <button type="button" class="king-btn mr10  king-success" id="search">查询</button>
+                    </div>
+                </div>
+            </form>
+            <div class="panel panel-default mb0">
+                <div class="panel-heading"> 查询结果 </div>
+                <div class="panel-body">
+                    <div style="height: 300px; position: relative;" id="chart_1538104680338" class="king-chart-box chart-line  k-chart" data-role="chart"></div>
+                </div>
+            </div>
+        </div>
+    <template id="app_tpl">
+    <option value="#id#">#name#</option>
+    </template>
+</%block>
+    <script>
+        // 创建图表
+        function createKendoLineChart(conf){
+            $(conf.selector).kendoChart({
+                transitions: false,
+                legend: {
+                   position: "bottom"
+                },
+                colors: ['yellow'],
+                theme : 'bootstrap',
+                seriesDefaults: {
+                    type: 'line',
+                    style: "normal",
+                    markers: {
+                        visible: false
+                    }
+                },
+                series: conf.data.series,
+                categoryAxis: {
+                    majorGridLines : {
+                        visible: false
+                    },
+                    categories: conf.data.categories,
+                    labels: {
+                        rotation: "auto"
+                    }
+                },
+                tooltip: {
+                    visible: true,
+                    template: "#= category # #= value #"
+                }
+            });
+            //重新绘制
+            $(window).on('resize',function(){
+                var chart = $(conf.selector).data("kendoChart");
+                chart.redraw();
+            });
+        }
+
+        function initKendoLineChart(conf){
+            // 异步请求后台数据
+            $.ajax({
+                url: conf.url,
+                type: 'GET',
+                data: {'biz_id': conf.biz_id, 'ip': conf.ip},
+                dataType: conf.dataType,
+                success: function(res){
+                    //获取数据成功
+                    if (res.result){
+                        var data = {
+                            series: res.data.series,
+                            categories: res.data.categories
+                        };
+                        createKendoLineChart({
+                            selector: conf.container, // 图表容器
+                            data: data // 图表数据
+                        });
+                    }
+                }
+            });
+        }
+
+        function renderTpl(str, cfg) {
+            var re = /(#(.+?)#)/g;
+
+            return str.replace(re, function() {
+                var val = cfg[arguments[2]]+'';
+                if(typeof val == 'undefined') {
+                    val = '';
+                }
+                return val;
+            });
+        }
+    </script>
+    <script>
+        $(function(){
+            $.get('${SITE_URL}get_biz_list/', function (data) {
+                if (data.result){
+                    var _html = '';
+                    var list =  data.bizs;
+                    var tpl = $('#app_tpl').html();
+                    for (var i = 0; i < list.length; i++) {
+                        var item = list[i];
+                        _html += renderTpl(tpl, item)
+                    }
+                    $('#biz_id').html(_html);
+                }
+                else {
+                    alert('获取业务列表失败')
+                }
+            }, 'json');
+
+            $("#plugin3_demo3 .select2_box").select2({
+                ajax: {
+                    url: "${SITE_URL}get_ip_by_biz_id/",
+                    data: function () {
+                        var query = {
+                            'biz_id': $('#biz_id').val()
+                        };
+                        return query
+                    },
+                    cache: false,
+                    //对返回的数据进行处理
+                    results: function(data){
+                        return data;
+                    }
+                }
+
+            });
+
+            $('#search').click(function () {
+                var search_ip = $('#select2-chosen-1').text();
+                if (!$.trim(search_ip).length) {
+                    var d = dialog({
+                        width: 260,
+                        title: '提示',
+                        content: '<div class="king-notice-box king-notice-fail"><p class="king-notice-text">请输入查询IP</p></div>',
+                        cancel: false,
+                        ok: function() {}
+                    });
+                    d.show();
+                    return;
+                }
+                initKendoLineChart({
+                    url: '${SITE_URL}get_host_state/',
+                    biz_id: $('#biz_id').val(),
+                    ip: $.trim(search_ip),
+                    dataType: 'json',
+                    container: '#chart_1538104680338'
+                });
+            });
+
+            $('#biz_id').change(function () {
+                $('#select2-chosen-1').text('');
+            });
+        });
+    </script>

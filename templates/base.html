@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%block name='head'>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <title><%block name='title'></%block></title>
+      <meta name="description" content=""/>
+      <meta name="author" content=""/>
+      <link rel="shortcut icon" href="${STATIC_URL}favicon.ico" type="image/x-icon">
+      <!-- bootstrap css -->
+        <link href="${STATIC_URL}assets/bootstrap-3.3.4/css/bootstrap.css" rel="stylesheet">
+        <!-- 禁止bootstrap 响应式 （app根据自身需求启用或禁止bootstrap响应式） -->
+        <link href="${STATIC_URL}assets/bootstrap-3.3.4/css/bootstrap_noresponsive.css" rel="stylesheet">
+        <!--自定义css-->
+        <link href="${STATIC_URL}css/bk.css?v=${STATIC_VERSION}" rel="stylesheet">
+      <link rel="stylesheet" type="text/css" href="${STATIC_URL}css/index.css?v=${STATIC_VERSION}">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/kendoui-2015.2.624/styles/kendo.common.min.css" rel="stylesheet">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/kendoui-2015.2.624/styles/kendo.default.min.css" rel="stylesheet">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/fontawesome/css/font-awesome.css" rel="stylesheet">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/artDialog-6.0.4/css/ui-dialog.css" rel="stylesheet">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/bk/css/bk.css" rel="stylesheet">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/bk/css/bk_pack.css" rel="stylesheet">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/select2-3.5.2/select2.css" rel="stylesheet">
+      <link href="https://magicbox.bk.tencent.com/static_api/v3/assets/artDialog-6.0.4/css/ui-dialog.css" rel="stylesheet">
+      <link href="${STATIC_URL}css/pagination.css" rel="stylesheet">
+      <!-- 这个是全局配置，如果需要在js中使用app_id和site_url,则这个javascript片段一定要保留 -->
+      <script type="text/javascript">
+          var app_id = "${APP_ID}";
+          var site_url = "${SITE_URL}";	  // app的url前缀,在ajax调用的时候，应该加上该前缀
+          var static_url = "${STATIC_URL}"; // 静态资源前缀
+      </script>
+      <!--[if lt IE 9]><script src="https://magicbox.bk.tencent.com/static_api/v3/assets/js/html5shiv.min.js"></script><script src="https://magicbox.bk.tencent.com/static_api/v3/assets/js/respond.min.js"></script><![endif]-->
+    </%block>
+  </head>
+
+<body class="bg-white" data-bg-color="bg-white">
+    <div class="king-page-box">
+        <div class="king-layout1-header">
+            <nav role="navigation" class="navbar navbar-default king-horizontal-nav2    f14 ">
+                <div class="container " style="width:100%;overflow:hidden;">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed navbar-toggle-sm" data-toggle="collapse" data-target="#king-horizontal-nav2-collapse">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="javascript:;">
+                            <img src="https://magicbox.bk.tencent.com/static_api/v3/bk/images/logo3.png" alt="" class="logo"> </a>
+                    </div>
+                    <div class="collapse navbar-collapse navbar-responsive-collapse" id="king-horizontal-nav2-collapse">
+                        <ul class="nav navbar-nav">
+                            <li class="king-navbar-active"><a href="${SITE_URL}">首页</a></li>
+                            <li><a href="${SITE_URL}host_state/">主机状态</a></li>
+                            <li><a href="${SITE_URL}operations/">操作记录</a></li>
+                        </ul>
+                        <!--<ul class="nav navbar-nav navbar-right">-->
+                            <!--<li>-->
+                                <!--<a href="javascript:;">-->
+                                    <!--<span>管理者</span>-->
+                                <!--</a>-->
+                            <!--</li>-->
+                        <!--</ul>-->
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <%block name='content'></%block>
+    <!-- jquery js  -->
+    <script src="${STATIC_URL}js/jquery-1.10.2.min.js" type="text/javascript"></script>
+    <script src="${STATIC_URL}js/jquery.json-2.3.min.js" type="text/javascript"></script>
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/echarts-2.0/echarts-all.js"></script>
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/kendoui-2015.2.624/js/kendo.all.min.js"></script>
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/echarts-2.0/echarts-all.js"></script>
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/bk/js/bk.js"></script>
+    <script src="http://magicbox.bk.tencent.com/static_api/analysis.js"></script>
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/artDialog-6.0.4/dist/dialog-min.js"></script>
+    <script src="https://magicbox.bk.tencent.com/static_api/v3/assets/select2-3.5.2/select2.js"></script>
+    <script src='${STATIC_URL}js/pagination.js'></script>
+    <!-- bootstrap js  -->
+    <script src="${STATIC_URL}assets/bootstrap-3.3.4/js/bootstrap.min.js" type="text/javascript"></script>
+    <!--配置js  勿删-->
+    <script src="${STATIC_URL}js/settings.js?v=${STATIC_VERSION}" type="text/javascript"></script>
+    <!-- app使用数据统计上报脚本 -->
+    <!-- <script src="${BK_PLAT_HOST}/console/static/js/analysis.min.js?v=${STATIC_VERSION}" type="text/javascript"></script> -->
+    ${self.body()}
+    <!-- 兼容性设置 -->
+    <!--[if lt IE 6]>\xe8\x93\x9d\xe9\xb2\xb8\xe6\x99\xba\xe8\x90\xa5\x20\xe7\x89\x88\xe6\x9d\x83\xe6\x89\x80\xe6\x9c\x89<![endif]-->
+  </body>
+</html>

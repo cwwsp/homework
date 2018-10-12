@@ -1,0 +1,329 @@
+<%inherit file="/base.html"/>
+<%block name='title'>首页</%block>
+<%block name="content">
+        <div class="king-layout2-main mt15" style="width:960px;">
+            <form class="form-horizontal">
+                <div class="form-group clearfix ">
+                    <label class="col-sm-3 control-label bk-lh30 pt0">选择业务：</label>
+                    <div class="col-sm-4">
+                        <select name="" id="biz_id" class="form-control bk-valign-top">
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group clearfix ">
+                    <label class="col-sm-3 control-label bk-lh30 pt0">选择IP：</label>
+                    <div class="plugin3_demo col-sm-9" id="plugin3_demo3" style="display:inline-block;">
+                        <!-- select2 通过ajax start -->
+                        <div class="select2-container select2_box select2-container-active" id="s2id_autogen5" style="width:300px;">
+                            <a href="javascript:void(0)" class="select2-choice" tabindex="-1"> <span class="select2-chosen" id="select2-chosen-6">&nbsp;</span><abbr class="select2-search-choice-close"></abbr> <span class="select2-arrow" role="presentation"><b role="presentation"></b></span></a>
+                            <label for="s2id_autogen6" class="select2-offscreen"></label>
+                            <input class="select2-focusser select2-offscreen" type="text" aria-haspopup="true" role="button" aria-labelledby="select2-chosen-6" id="s2id_autogen6">
+                        </div>
+                        <input type="hidden" class="select2_box" style="width: 300px; display: none;" tabindex="-1" title="">
+                        <!-- select2 通过ajax end -->
+                    </div>
+                </div>
+                <div class="form-group clearfix">
+                    <div class="col-sm-9 col-sm-offset-3">
+                        <button type="button" class="king-btn mr10  king-success" id="search">查询</button>
+                        <button type="button" class="king-btn king-default " id="clear">清除查询</button>
+                    </div>
+                </div>
+            </form>
+            <table class="table mb0 pr15 ranger-box2  ">
+                <thead>
+                </thead>
+                <tbody>
+                    <tr>
+                    </tr>
+                </tbody>
+            </table>
+
+            <template id="app_tpl">
+            <option value="#id#">#name#</option>
+            </template>
+
+            <template id="header_tpl_15393285728382">
+                <tr>
+                    <th style="width: 5%; text-align: center">#</th>
+                    <th style="width: 10%; text-align: center">IP</th>
+                    <th style="width: 15%; text-align: center">Mem/Disk/CPU</th>
+                    <th style="width: 15%; text-align: center">最后巡检时间</th>
+                    <th style="width: 10%; text-align: center">大区</th>
+                    <th style="width: 10%; text-align: center">模块</th>
+                    <th style="width: 10%; text-align: center">云区域</th>
+                    <th style="width: 10%; text-align: center">系统类型</th>
+                    <th style="width: 15%; text-align: center">操作</th>
+                </tr>
+            </template>
+            <template id="tpl_15393285728382">
+                <tr>
+                    <td style="width: 5%; text-align: center">#id#</td>
+                    <td style="width: 10%; text-align: center">#ip#</td>
+                    <td style="width: 15%; background-color: lightgreen; text-align: center">#resource#</td>
+                    <td style="width: 15%; text-align: center">#last_time#</td>
+                    <td style="width: 10%; text-align: center">#set#</td>
+                    <td style="width: 10%; text-align: center">#module#</td>
+                    <td style="width: 10%; text-align: center">#area#</td>
+                    <td style="width: 10%; text-align: center">#os#</td>
+                    <td style="width: 15%; text-align: center">
+                        <button class="btn btn-xs btn-success" title="立即检查" onclick="execute_script(this)" > <i class="glyphicon glyphicon-ok"></i> </button>
+                        <button class="btn btn-xs btn-warning" title="加入自动检查" onclick="add_to_celery(this)"> <i class="glyphicon glyphicon-edit"></i> </button>
+                        <button class="btn btn-xs btn-danger" title="取消自动检查" onclick="remove_from_celery(this)"> <i class="glyphicon glyphicon-remove"></i> </button>
+                    </td>
+                </tr>
+            </template>
+            <!-- 设置面板End -->
+        </div>
+</%block>
+
+
+    <script>
+        function renderTpl(str, cfg) {
+            var re = /(#(.+?)#)/g;
+
+            return str.replace(re, function() {
+                var val = cfg[arguments[2]]+'';
+                if(typeof val == 'undefined') {
+                    val = '';
+                }
+                return val;
+            });
+        }
+
+        function get_hosts_by_bizId(biz_id) {
+            $.ajax({
+                url: '${SITE_URL}get_hosts_by_bizId/',
+                data: {'biz_id': biz_id},
+                type: 'GET',
+                success: function (data) {
+                    if (!data.hosts.length) {
+                        alert('查询失败');
+                        return;
+                    }
+                    if (data.result) {
+                        var _html = '';
+                        var list = data.hosts;
+                        var tpl = $('#tpl_15393285728382').html();
+                        var headerTpl = $('#header_tpl_15393285728382').html();
+                        for (var i = 0, len = list.length; i < len; i++) {
+                            var item = list[i];
+                            _html += renderTpl(tpl, item)
+                        }
+                        $('.ranger-box2 tbody').html(_html);
+                        $('.ranger-box2 thead').html(renderTpl(headerTpl, data.catalogues));
+                    }
+                }
+            })
+        }
+
+    /*
+    * 表单查询事件提交，获取作业执行结果
+    */
+        function execute_script(button) {
+            var ip = $(button).closest('tr').find('td:eq(1)').text();
+            var biz_id = $('#biz_id').val();
+            $.post('${SITE_URL}execute_script/', {'biz_id': biz_id, 'ip': ip}, function (data) {
+                if(data.result) {
+                    var job_instance_id = data.job_instance_id;
+                    get_script_log_content(biz_id, job_instance_id, button);
+                }
+            }, 'json');
+        }
+
+     //获取作业执行结果，渲染表格
+        function get_script_log_content(biz_id, job_instance_id, button) {
+            $.ajax({
+                url: '${SITE_URL}get_script_log_content/',
+                type: 'GET',
+                data: {'biz_id': biz_id, 'job_instance_id': job_instance_id},
+                dataType: 'json',
+                success: function (res) {
+                    var log_content = res.data.log_content;
+                    var latest_time = res.data.latest_time;
+                    if (log_content.length) {
+                        $(button).closest('tr').find('td:eq(2)').text(log_content);
+                        $(button).closest('tr').find('td:eq(3)').text(latest_time);
+                    }
+                    else {
+                        $(button).closest('tr').find('td:eq(2)').text('-');
+                        $(button).closest('tr').find('td:eq(3)').text('-');
+                        setTimeout(function () {get_script_log_content(biz_id, job_instance_id, button)}, 1000)
+                    }
+                }
+            })
+        }
+
+     //把IP加入自动检查
+        function add_to_celery(button) {
+            var ip = $(button).closest('tr').find('td:eq(1)').text();
+            var biz_id = $('#biz_id').val();
+            var biz = $('#biz_id').find("option:selected").text();
+            var d = dialog({
+                width: 260,
+                title: '提示',
+                quickClose: true,
+                content: '确认将' + biz + '业务下的' + ip + '加入自动检查吗？',
+                ok: function () {
+                    $.post('${SITE_URL}add_to_celery/', {'biz_id': biz_id, 'ip': ip}, function (data) {
+                        if (data.result) {
+                            var d_ok = dialog({
+                                width: 260,
+                                title: "提示",
+                                content: '<div class="king-notice3 king-notice-success">' +
+                                '<span class="king-notice-img"></span>' +
+                                '<div class="king-notice-text">' +
+                                '<p class="f24">加入成功</p>' +
+                                '</div>' +
+                                '</div>'
+                            });
+                            d_ok.show();
+                        } else {
+                            var d_fail = dialog({
+                                width: 260,
+                                title: "提示",
+                                content: '<div class="king-notice3 king-notice-fail">'+
+                                    '<span class="king-notice-img"></span>'+
+                                    '<div class="king-notice-text">'+
+                                        '<p class="f24">队列中已存在该IP</p>'+
+                                    '</div>'+
+                                    '</div>'
+                            });
+                            d_fail.show()
+                        }
+                    }, 'json')
+                },
+                cancelValue: '取消',
+                cancel: function () {
+                    console.log(this)
+                },
+                onshow: function () {
+                    console.log(this)
+                }
+            });
+            d.show();
+        }
+
+        // 把IP取消自动检查
+        function remove_from_celery(button) {
+            var ip = $(button).closest('tr').find('td:eq(1)').text();
+            var biz_id = $('#biz_id').val();
+            var biz = $('#biz_id').find("option:selected").text();
+            var d = dialog({
+                width: 260,
+                title: '提示',
+                quickClose: true,
+                content: '确认将' + biz + '业务下的' + ip + '从自动检查队列中移除吗？',
+                ok: function () {
+                    $.post('${SITE_URL}remove_from_celery/', {'biz_id': biz_id, 'ip': ip}, function (data) {
+                        if (data.result) {
+                            var d_ok = dialog({
+                                width: 260,
+                                title: "提示",
+                                content: '<div class="king-notice3 king-notice-success">' +
+                                '<span class="king-notice-img"></span>' +
+                                '<div class="king-notice-text">' +
+                                '<p class="f24">移除成功</p>' +
+                                '</div>' +
+                                '</div>'
+                            });
+                            d_ok.show();
+                        } else {
+                            var d_fail = dialog({
+                                width: 260,
+                                title: "提示",
+                                content: '<div class="king-notice3 king-notice-fail">'+
+                                    '<span class="king-notice-img"></span>'+
+                                    '<div class="king-notice-text">'+
+                                        '<p class="f24">该IP未加入队列</p>'+
+                                    '</div>'+
+                                    '</div>'
+                            });
+                            d_fail.show();
+                        }
+                    })
+                },
+                cancelValue: '取消',
+                cancel: function () {
+                    console.log(this)
+                },
+                onshow: function () {
+                    console.log(this)
+                }
+            });
+            d.show()
+        }
+
+        $(function () {
+            /*
+            * 查询表单级联数据拉取
+            */
+            $.get('${SITE_URL}get_biz_list/', function (data) {
+                if (data.result){
+                    var _html = '';
+                    var list =  data.bizs;
+                    var tpl = $('#app_tpl').html();
+                    for (var i = 0; i < list.length; i++) {
+                        var item = list[i];
+                        _html += renderTpl(tpl, item)
+                    }
+                    $('#biz_id').html(_html);
+                    get_hosts_by_bizId(list[0].id);
+                }
+                else {
+                    alert('获取业务列表失败')
+                }
+            }, 'json');
+
+
+            $('#biz_id').change(function () {
+                var biz_id = $('#biz_id').val();
+                $('#select2-chosen-1').text('');
+                get_hosts_by_bizId(biz_id);
+            });
+
+            $('#search').click(function () {
+               var ip = $.trim($('#select2-chosen-1').text());
+               var biz_id = $('#biz_id').val();
+               if (!ip.length) {
+                   get_hosts_by_bizId(biz_id);
+                   return;
+               }
+               $.get('${SITE_URL}get_hosts_and_status_by_ip', {'ip': ip, 'biz_id': biz_id}, function (res) {
+                   if (res.result) {
+                       var _html = '';
+                       var item = res.match_host[0];
+                       var tpl = $('#tpl_15393285728382').html();
+                       var headerTpl = $('#header_tpl_15393285728382').html();
+                       _html += renderTpl(tpl, item);
+                       $('.ranger-box2 tbody').html(_html);
+                       $('.ranger-box2 thead').html(renderTpl(headerTpl, res.catalogues));
+                   }
+               })
+            });
+
+            $("#plugin3_demo3 .select2_box").select2({
+                ajax: {
+                    url: "${SITE_URL}get_ip_by_biz_id/",
+                    data: function () {
+                        var p_query = {
+                            'biz_id': $('#biz_id').val()
+                        };
+                        return p_query;
+                    },
+                    cache: false,
+                    //对返回的数据进行处理
+                    results: function(data){
+                        return data;
+                    }
+                }
+            });
+
+            $('#clear').click(function () {
+                $('#select2-chosen-1').text("");
+                var biz_id = $('#biz_id').val();
+                get_hosts_by_bizId(biz_id);
+            })
+        });
+    </script>
+
